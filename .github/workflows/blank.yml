@@ -1,0 +1,92 @@
+import random
+
+# Initialize the deck of cards and shuffle them
+def build_deck():
+    values = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
+    types = ["C", "D", "H", "S"]
+    deck = []
+
+    for t in types:
+        for v in values:
+            deck.append(v + "-" + t)
+    
+    random.shuffle(deck)
+    return deck
+
+# Calculate the value of a card
+def get_value(card):
+    value = card.split("-")[0]
+    if value in ["J", "Q", "K"]:
+        return 10
+    elif value == "A":
+        return 11
+    else:
+        return int(value)
+
+# Check for Aces and adjust the sum if necessary
+def adjust_for_aces(sum, ace_count):
+    while sum > 21 and ace_count > 0:
+        sum -= 10
+        ace_count -= 1
+    return sum
+
+# Deal two initial cards to a player
+def deal_hand(deck):
+    return [deck.pop(), deck.pop()]
+
+# Player's turn to hit or stay
+def player_turn(deck, player_hand):
+    while sum(player_hand) <= 21:
+        action = input("Do you want to hit (H) or stay (S)? ").upper()
+        if action == "H":
+            player_hand.append(deck.pop())
+            print("Your hand:", player_hand)
+        elif action == "S":
+            break
+        else:
+            print("Invalid input. Please choose 'H' to hit or 'S' to stay.")
+    return player_hand
+
+# Dealer's turn to hit or stay
+def dealer_turn(deck, dealer_hand):
+    while sum(dealer_hand) < 17:
+        dealer_hand.append(deck.pop())
+    return dealer_hand
+
+# Determine the winner of the game
+def determine_winner(player_sum, dealer_sum):
+    if player_sum > 21:
+        return "Dealer"
+    elif dealer_sum > 21:
+        return "Player"
+    elif player_sum == dealer_sum:
+        return "Tie"
+    elif player_sum > dealer_sum:
+        return "Player"
+    else:
+        return "Dealer"
+
+# Main function to run the game
+def play_blackjack():
+    deck = build_deck()
+    player_hand = deal_hand(deck)
+    dealer_hand = deal_hand(deck)
+
+    print("Your hand:", player_hand)
+    print("Dealer's hand:", [dealer_hand[0], "XX"])  # Show only the first card of the dealer
+
+    player_hand = player_turn(deck, player_hand)
+    player_sum = adjust_for_aces(sum(player_hand), player_hand.count(11))
+
+    if player_sum <= 21:
+        dealer_hand = dealer_turn(deck, dealer_hand)
+        dealer_sum = adjust_for_aces(sum(dealer_hand), dealer_hand.count(11))
+
+        print("Your final hand:", player_hand, ", Total:", player_sum)
+        print("Dealer's final hand:", dealer_hand, ", Total:", dealer_sum)
+
+        winner = determine_winner(player_sum, dealer_sum)
+        print("The winner is:", winner)
+
+# Run the game
+play_blackjack()
