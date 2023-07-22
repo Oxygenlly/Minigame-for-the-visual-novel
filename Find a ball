@@ -1,0 +1,152 @@
+import random
+import pygame
+import os
+import sys
+
+# Set the path to the image files
+IMAGE_PATH = "images"
+CUPS_IMAGE = os.path.join(IMAGE_PATH, "cups.jpg")
+BALL_IMAGE = os.path.join(IMAGE_PATH, "ball.jpg")
+BACKGROUND_IMAGE = os.path.join(IMAGE_PATH, "bg.jpg")
+
+# Initialize pygame
+pygame.init()
+
+# Set the window dimensions
+WINDOW_WIDTH = 800
+WINDOW_HEIGHT = 600
+
+# Initialize the window and set the background image
+window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+pygame.display.set_caption("Find the Ball")
+clock = pygame.time.Clock()
+
+# Colors
+WHITE = (255, 255, 255)
+
+# Game variables
+cup_x = [100, 300, 500]
+cup_y = 400
+ball_cup = 0
+player_guess = -1
+rounds = 0
+points = 0
+money = 100  # Starting money for the player
+shuffle_speed = 10  # Initial shuffle speed
+
+def initialize_game():
+    global rounds, points, money, shuffle_speed
+    rounds = 0
+    points = 0
+    money = 100
+    shuffle_speed = 10
+
+def shuffle_cups():
+    global ball_cup
+    ball_cup = random.randint(0, 2)
+
+def display_images():
+    cup_image = pygame.image.load(CUPS_IMAGE)
+    ball_image = pygame.image.load(BALL_IMAGE)
+
+    window.blit(pygame.image.load(BACKGROUND_IMAGE), (0, 0))  # Set the background image
+    window.blit(cup_image, (cup_x[0], cup_y))
+    window.blit(cup_image, (cup_x[1], cup_y))
+    window.blit(cup_image, (cup_x[2], cup_y))
+
+    # Display the ball under one of the cups
+    window.blit(ball_image, (cup_x[ball_cup] + 50, cup_y + 50))
+
+def get_player_bet():
+    global money
+    print(f"Your current money: ${money}")
+    while True:
+        bet = int(input("Enter the amount to bet (10, 20, 30, 40, 50): "))
+        if bet not in [10, 20, 30, 40, 50]:
+            print("Invalid bet amount. Please try again.")
+        elif bet > money:
+            print("You don't have enough money. Please try again.")
+        else:
+            money -= bet
+            return bet
+
+def get_player_guess():
+    global player_guess
+    player_guess = -1
+    while player_guess == -1:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                for i, cup in enumerate(cup_x):
+                    if cup <= x <= cup + 100 and cup_y <= y <= cup_y + 100:
+                        player_guess = i
+
+def evaluate_guess():
+    global points, money
+    if player_guess == ball_cup:
+        points += 1
+        money *= 2
+    else:
+        money -= player_bet
+
+def increase_shuffle_speed():
+    global shuffle_speed
+    shuffle_speed -= 1  # Increase the speed to shuffle cups more quickly
+
+def handle_player_win():
+    print("Congratulations! You found the ball!")
+    print(f"Current Points: {points}")
+    print(f"Current Money: ${money}")
+    print()
+
+def handle_player_loss():
+    print("Oops! You missed.")
+    print(f"Current Points: {points}")
+    print(f"Current Money: ${money}")
+    print()
+
+def handle_game_over():
+    print("Game Over!")
+    print(f"Total Points: {points}")
+    print(f"Total Money: ${money}")
+    print("Thanks for playing!")
+    pygame.quit()
+    sys.exit()
+
+def main():
+    initialize_game()
+
+    while True:
+        global rounds
+        rounds += 1
+
+        shuffle_cups()
+        display_images()
+
+        player_bet = get_player_bet()
+        get_player_guess()
+        evaluate_guess()
+
+        if player_guess == ball_cup:
+            handle_player_win()
+        else:
+            handle_player_loss()
+
+        increase_shuffle_speed()
+
+        # Pause briefly to show the shuffled cups
+        for _ in range(shuffle_speed):
+            pygame.display.update()
+            pygame.time.delay(50)
+
+        play_again_input = input("Do you want to play again? (Y/N): ").strip().lower()
+        if play_again_input != "y":
+            break
+
+    handle_game_over()
+
+if __name__ == "__main__":
+    main()
